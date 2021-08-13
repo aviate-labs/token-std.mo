@@ -1,7 +1,6 @@
 import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
 import Principal "mo:base/Principal";
-import Result "mo:base/Result";
 
 import Errors "errors";
 import Events "events";
@@ -58,13 +57,14 @@ shared({caller}) actor class ERC20 (
         to : Principal,                  // Recipient of the tokens.
         value : Nat,                     // Amount of tokens.
         transferEvent: ?Events.Transfer, // Transfer event.
-    ) : async Result.Result<(),Errors.Transfer> {
-        if (_balanceOf(caller) < value) { return #err(#InsufficientTokens); };
+    ) : async Bool {
+        let balance = _balanceOf(caller);
+        if (balance < value) { throw Errors.InsufficientBalance(balance, value); };
         _transfer(caller, to, value); // Transfer value.
         ignore Events.fireTransfer(   // Fire transfer event.
             transferEvent, caller, to, value,
         );
-        #ok(());
+        true;
     };
     // @pre: account balance > value
     private func _transfer(from : Principal, to : Principal, value : Nat) {
@@ -86,14 +86,15 @@ shared({caller}) actor class ERC20 (
         to : Principal,                  // Recipient of the tokens.
         value : Nat,                     // Amount of tokens.
         transferEvent: ?Events.Transfer, // Transfer event.
-    ) : async Result.Result<(),Errors.Transfer> {
+    ) : async Bool {
         let allowed = _allowance(from, caller);
-        if (allowed          < value) { return #err(#InsufficientAllowence); };
-        if (_balanceOf(from) < value) { return #err(#InsufficientTokens);    };
+        if (allowed < value) { throw Errors.InsufficientAllowance(allowed, value); };
+        let balance = _balanceOf(from);
+        if (balance < value) { throw Errors.InsufficientBalance(balance, value); };
         let newAllowed : Nat = allowed - value;
         _approve(from, caller, newAllowed);
         _transfer(from, to, value);
-        #ok(());
+        true;
     };
 
     // Allows 'spender' to withdraw from your account multiple times, up to the 'value' amount. 

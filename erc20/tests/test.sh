@@ -38,7 +38,7 @@ check "Check inital balance." \
 
 check "Transfer 10 tokens." \
       "$(dfx canister call token transfer "(principal \"${p1}\", 10, null)")" \
-      "(variant { ok })"
+      "(true)"
 
 check "Check remaining balance." \
       "$(dfx canister call token balanceOf "(principal \"${p0}\")")" \
@@ -55,9 +55,12 @@ check "Check allowance." \
       "(40 : nat)"
 
 dfx -q identity use "user"
-check "Transfer 40 token with allowance." \
+check "Transfer 40 tokens with allowance." \
       "$(dfx canister call token transferFrom "(principal \"${p0}\", principal \"${p1}\", 40, null)")" \
-      "(variant { ok })"
+      "(true)"
+check "Check allowance." \
+      "$(dfx canister call token allowance "(principal \"${p0}\", principal \"${p1}\")")" \
+      "(0 : nat)"
 check "Check balance." \
       "$(dfx canister call token balanceOf "(principal \"${p1}\")")" \
       "(50 : nat)"
