@@ -6,7 +6,7 @@ import Result "mo:base/Result";
 import Errors "errors";
 import Events "events";
 
-shared({caller}) actor class Token(
+shared({caller}) actor class ERC20 (
     tkName : Text,       // Name of the token.
     tkSymbol : Text,     // Symbol of the token.
     tkDecimals : Nat8,   // Number of decimals the token uses.
@@ -17,21 +17,25 @@ shared({caller}) actor class Token(
     public query func name() : async Text {
         _name;
     };
+
     private stable let _symbol : Text = tkSymbol;
     // Returns the symbol of the token.
     public query func symbol() : async Text {
         _symbol;
     };
+
     private stable let _decimals : Nat8 = tkDecimals;
     // Returns the number of decimals the token uses.
     public query func decimals() : async Nat8 {
         _decimals;
     };
+
     private stable let _totalSupply : Nat = tkTotalSupply;
     // Returns the total token supply.
     public query func totalSupply() : async Nat {
         _totalSupply;
     };
+
     private stable var _balances : [(Principal, Nat)] = [];
     private var balances = HashMap.HashMap<
         Principal, // Address owner.
@@ -41,7 +45,6 @@ shared({caller}) actor class Token(
     public query func balanceOf(owner : Principal) : async Nat {
         _balanceOf(owner);
     };
-
     // Returns the account balance of another account with address 'owner'.
     private func _balanceOf(owner : Principal) : Nat {
         switch (balances.get(owner)) {
@@ -49,6 +52,7 @@ shared({caller}) actor class Token(
             case (? balance) { balance; };
         };
     };
+
     // Transfers 'value' amount of tokens to address 'to'.
     public shared({caller}) func transfer(
         to : Principal,                  // Recipient of the tokens.
@@ -74,6 +78,7 @@ shared({caller}) actor class Token(
         let newToBalance : Nat = toBalance + value;
         balances.put(to, newToBalance);
     };
+
     // Transfers 'value' amount of tokens from address 'from' to address 'to'.
     // NOTE: the caller must be approved by the owner to tranfer tokens, even if the caller is the owner.
     public shared({caller}) func transferFrom(
@@ -90,6 +95,7 @@ shared({caller}) actor class Token(
         _transfer(from, to, value);
         #ok(());
     };
+
     // Allows 'spender' to withdraw from your account multiple times, up to the 'value' amount. 
     // If this function is called again it overwrites the current allowance with 'value'.
     public shared({caller}) func approve(
@@ -126,6 +132,7 @@ shared({caller}) actor class Token(
             };
         };
     };
+
     private stable var _allowances : [(Principal, [(Principal, Nat)])] = [];
     private var allowances = HashMap.HashMap<
         Principal, // Address owner.
@@ -149,9 +156,11 @@ shared({caller}) actor class Token(
             case (null) { return 0; };
         }
     };
+
     system func preupgrade() {
         _balances := Iter.toArray(balances.entries());
     };
+
     system func postupgrade() {
         balances := HashMap.fromIter<Principal,Nat>(
             _balances.vals(),
@@ -161,4 +170,4 @@ shared({caller}) actor class Token(
         );
         _balances := [];
     };
-}
+};

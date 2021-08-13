@@ -1,7 +1,7 @@
 {
   "canisters": {
     "token": {
-      "main": "../token.mo",
+      "main": "../erc20.mo",
       "type": "motoko"
     }
   },
